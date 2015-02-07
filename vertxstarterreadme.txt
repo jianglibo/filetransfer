@@ -26,3 +26,4 @@ mvn integration-test
 mvn -Dtest=TestCircle#mytest test
 
 mvn test -Dtest=JavaScriptIntegrationTests
+mvn test -Dtest=ClojureScriptIntegrationTests
