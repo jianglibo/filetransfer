@@ -29,8 +29,7 @@ import org.vertx.testtools.TestVerticleInfo;
  * The scripts go in src/test/resources.
  */
 @RunWith(ScriptClassRunner.class)
-//@TestVerticleInfo(filenameFilter = ".+_test\\.clj", funcRegex = "defn[\\s]+(test[^\\s]+)")
-@TestVerticleInfo(filenameFilter = ".+_test\\.clj", funcRegex = "deftest[\\s]+([^\\s]+)")
+@TestVerticleInfo(filenameFilter = ".+_test\\.clj", funcRegex = "defn[\\s]+(test[^\\s]+)")
 public class ClojureScriptIntegrationTests {
 
     @Test
