@@ -17,7 +17,7 @@ public class SocketStatus {
   }
 
   public enum SocketState {
-    BEGIN, HEAD_PARSED, UPLOADING_FILE
+    BEGIN, HEAD_PARSED, UPLOADING_FILE, FILE_ERROR, UPLOAD_COMPLETE
   }
 
 }

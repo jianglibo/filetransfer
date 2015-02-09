@@ -10,37 +10,44 @@ import cn.intellijoy.vertx.filetransfer.SocketStatus.SocketState;
 
 public class BufferReceiver {
   
-  private Buffer buffer;
+  private Buffer headerBuffer;
   
   private SocketStatus status;
   
   private UploadHeader header;
   
   public BufferReceiver() {
-    this.buffer = new Buffer();
+    this.headerBuffer = new Buffer();
     this.status = new SocketStatus();
   }
   
   public void appendBuffer(Buffer buf) {
     switch (this.status.getState()) {
       case BEGIN:
-        buffer.appendBuffer(buf);
+        headerBuffer.appendBuffer(buf);
         parseHeader();
         break;
       case HEAD_PARSED:
+        processUploading(buf);
+        break;
       default:
         break;
     }
     
   }
   
+  private void processUploading(Buffer buf) {
+    this.status.setState(SocketState.UPLOADING_FILE);
+    
+  }
+
   public boolean headerParsed() {
     return this.status.getState() == SocketState.HEAD_PARSED;
   }
 
 
   private void parseHeader() {
-    this.header = new UploadHeader(this.buffer);
+    this.header = new UploadHeader(this.headerBuffer);
     if (this.header.isSuccess()) {
       this.status.setState(SocketState.HEAD_PARSED);
     }

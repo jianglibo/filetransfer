@@ -27,3 +27,8 @@ mvn -Dtest=TestCircle#mytest test
 
 mvn test -Dtest=JavaScriptIntegrationTests
 mvn test -Dtest=ClojureScriptIntegrationTests
+
+
+在集成测试环境下，classpath包含了target目录，但是直接vertx run raw verticle情况下，这些classpath都没有设置好，会启动失败。
+
+所以强制自己写测试代码，而不是人工观察。

@@ -37,7 +37,7 @@ import static org.vertx.testtools.VertxAssert.*;
  *
  * This test demonstrates how to do that.
  */
-public class ModuleIntegrationTest extends TestVerticle {
+public class ReceiveFileIntegrationTest extends TestVerticle {
 
   @Test
   public void testPing() {
