@@ -1,9 +1,17 @@
-# Vert.x Example Maven Project
+# a socket file transfer program
 
-Example project for creating a Vert.x module with a Gradle build.
+这不是通用的程序，是应一个朋友的要求实现的特定的需求。
 
-By default this module contains a simple Java verticle which listens on the event bus and responds to `ping!`
-messages with `pong!`.
+代码本身没什么花头，关键是理解运作的过程和机制。
 
-This example also shows you how to write tests in Java, Groovy, Ruby and Python
+c：客户端
+s：服务端
 
+上传（按发生的时间）：
+start-》c开始发送头部（包含后续发送的文件的长度）-》s接收头部，解析头部-》返回指令给c-》c开始上传文件-》s接收保存-》返回结果给c-》end
+
+从s的角度来说，只是不停的接受字节流而已，为了完成不同的动作（解析头部，保存文件），必须在s端维护一个状态（阈值，边界标志），根据当前的状态采取不同的动作。
+
+可以设置这样一个值：{:state :start|:header-parsed}，这样问题就很明显了。每次接收到buffer，看看这个阈值，如果是:start，就累积buffer，直到头的规格得到解析，然后切换到:header-parsed， 告诉c可以发送文件了，s开始接收流，程序开始收到buffer，此时因为阈值是:header-parsed，对于这些buffer不再累积在内存，直接放到磁盘文件即可。
+
+此程序代码就是用这种思路写成，采用clojure，当然你用vertx支持的其它语言都是一样的。

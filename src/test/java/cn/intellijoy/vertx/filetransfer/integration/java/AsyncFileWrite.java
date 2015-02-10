@@ -2,17 +2,17 @@ package cn.intellijoy.vertx.filetransfer.integration.java;
 
 /*
  * Copyright 2013 Red Hat, Inc.
- * 
+ *
  * Red Hat licenses this file to you under the Apache License, version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain a copy of the License at:
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License
  * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
- * 
+ *
  * @author <a href="http://tfox.org">Tim Fox</a>
  */
 
@@ -28,9 +28,9 @@ import org.vertx.testtools.TestVerticle;
 
 import static org.vertx.testtools.VertxAssert.*;
 
-public class AsyncFileWriteTest extends TestVerticle {
+public class AsyncFileWrite extends TestVerticle {
 
-  private static final Logger log = LoggerFactory.getLogger(AsyncFileWriteTest.class);
+  private static final Logger log = LoggerFactory.getLogger(AsyncFileWrite.class);
 
   @Test
   public void testCloseAsyncFile() {
@@ -56,16 +56,16 @@ public class AsyncFileWriteTest extends TestVerticle {
     long fileLength = 10000L;
 
     long pos = 0;
-    
+
     long buffnum = 0;
-    
+
     long completenum = 0;
-    
+
     String path = System.getProperty("user.dir");
 
     AsyncFile af =
         vertx.fileSystem().openSync("testdatafolder/sync-write.dat", null, false, true, true, true);
-    
+
     Buffer buff = new Buffer("foooooooooooooooooooooooooooooooo\n");
     for (int i = 0; i < 5000; i++) {
       if (pos > fileLength) {

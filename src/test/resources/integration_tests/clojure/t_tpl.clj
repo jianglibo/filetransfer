@@ -1,32 +1,12 @@
-;; Copyright 2013 the original author or authors.
+;;(defn test-deploy-worker []
+;;  (eb/on-message
+;;   "test.data"
+;;   (fn [m]
+;;     (t/test-complete
+;;      (t/assert= "started" m))))
 ;;
-;; Licensed under the Apache License, Version 2.0 (the "License");
-;; you may not use this file except in compliance with the License.
-;; You may obtain a copy of the License at
-;;
-;;      http://www.apache.org/licenses/LICENSE-2.0
-;;
-;; Unless required by applicable law or agreed to in writing, software
-;; distributed under the License is distributed on an "AS IS" BASIS,
-;; WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-;; See the License for the specific language governing permissions and
-;; limitations under the License.
-;; 注意core/deploy-verticle 的参数是clj文件的路径，而不是clojure的ns
-
-(ns integration.clojure.deploy-test
-  (:require [vertx.testtools :as t]
-            [vertx.core :as core]
-            [vertx.eventbus :as eb]))
-
-(defn test-deploy-worker []
-  (eb/on-message
-   "test.data"
-   (fn [m]
-     (t/test-complete
-      (t/assert= "started" m))))
-
-  (core/deploy-worker-verticle "integration_tests/clojure/child.clj"
-                               :config {:ham "biscuit"}))
+;;  (core/deploy-worker-verticle "integration_tests/clojure/child.clj"
+;;                               :config {:ham "biscuit"}))
 
 ;;(defn test-deploy []
 ;;  (eb/on-message
@@ -87,5 +67,3 @@
 ;;   (fn [err]
 ;;     (t/test-complete
 ;;      (t/assert-not-nil err)))))
-
-(t/start-tests)
