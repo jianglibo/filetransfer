@@ -30,7 +30,7 @@ import org.vertx.testtools.TestVerticleInfo;
  */
 @RunWith(ScriptClassRunner.class)
 @TestVerticleInfo(filenameFilter = ".+_test\\.clj", funcRegex = "defn[\\s]+(test[^\\s]+)")
-public class ClojureScriptIntegrationTests {
+public class OriginTpl {
 
     @Test
     public void __vertxDummy() {

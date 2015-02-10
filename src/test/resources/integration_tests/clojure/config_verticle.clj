@@ -12,16 +12,13 @@
 ;; See the License for the specific language governing permissions and
 ;; limitations under the License.
 
-(ns integration-tests.clojure.child
+(ns integration-tests.clojure.config-verticle
   (:require [vertx.core :as core]
             [vertx.eventbus :as eb]
             [vertx.testtools :as tt]))
 
-(core/on-stop
-  (eb/send "test.data" "stopped"))
-
-(tt/assert= {:ham "biscuit"} (core/config))
-
-(eb/send "test.data" "started")
+(let [config (core/config)]
+  (tt/assert= Short (class (:short config))))
 
 
+(eb/send "test.data" "stoped")

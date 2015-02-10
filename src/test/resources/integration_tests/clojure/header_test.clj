@@ -22,28 +22,18 @@
 
 
 (defn test-file-server-header []
+
+  (eb/on-message
+   "test.data"
+   (fn [m]
+     (t/test-complete
+      (t/assert= (int 105) (.length m)))))
+
   (core/deploy-verticle "file_server.clj"
     :handler (fn [err deploy-id]
-               (println "verticle file_server.clj deployed.")
-;;               (Thread/sleep 5000)
-               (-> (net/client)
-                   (net/connect 1234 "localhost"
-                     (fn [err sock]
-                       (if-not err
-                         (do
-                           (println "We have connected")
-                           (stream/on-data sock
-                             (fn [data]
-                               (let [dlen (.length data)]
-                               (t/test-complete
-                                (t/assert= (int 105) dlen)
-                                ))))
-                           (doto sock
-                             (stream/write (short 0))
-                             (stream/write (short 99))
-                             (stream/write (short 6))
-                             (stream/write "abcdef" "ISO-8859-1")
-                             (stream/write (int 1000))))
-                         (println err))))))))
+               (core/deploy-verticle
+                 "file_client.clj"
+                  :config {:reply-to "test.data"
+                           :data-to-send [(short 0) (short 99) (short 6) ["abcdef" "ISO-8859-1"] (int 1000)]}))))
 
 (t/start-tests)

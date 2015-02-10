@@ -110,11 +110,13 @@
 	<version>18.0</version>
 </dependency>
 
+    <!--
   <dependency>
     <groupId>org.clojure</groupId>
     <artifactId>clojure</artifactId>
     <version>1.6.0</version>
   </dependency>
+    -->
 <dependency>
   <groupId>org.clojure</groupId>
   <artifactId>data.json</artifactId>
@@ -301,7 +303,7 @@
         </executions>
       </plugin>
 
-
+<!--
             <plugin>
         <groupId>com.theoryinpractise</groupId>
         <artifactId>clojure-maven-plugin</artifactId>
@@ -310,14 +312,12 @@
         <configuration>
           <temporaryOutputDirectory>true</temporaryOutputDirectory>
           <warnOnReflection>true</warnOnReflection>
-          <!--
   <sourceDirectories>
     <sourceDirectory>src/main/clojure</sourceDirectory>
   </sourceDirectories>
   <testSourceDirectories>
     <testSourceDirectory>src/test/resourecs</testSourceDirectory>
   </testSourceDirectories>
-   -->
         </configuration>
         <executions>
           <execution>
@@ -334,7 +334,6 @@
               <goal>test</goal>
             </goals>
           </execution>
-          <!--
            <execution>
             <id>generate-codox</id>
             <goals>
@@ -347,8 +346,6 @@
               <script>${basedir}/target/generate_codox.clj</script>
             </configuration>
           </execution>
--->
-          <!--
           <execution>
             <id>download-js-artifacts</id>
             <goals>
@@ -361,10 +358,9 @@
               <script>${basedir}/target/download_js_artifacts.clj</script>
             </configuration>
           </execution>
-           -->
         </executions>
       </plugin>
-
+-->
 
     </plugins>
   </build>

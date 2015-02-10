@@ -35,3 +35,13 @@
  (-> []
      (conj 1)
      (conj 2))
+(string? 1)
+
+(class "abc")
+
+(class [1])
+(nth [1 2] 1)
+(nth [1 2] 0)
+(last [1 2 3])
+
+(class short)
