@@ -45,3 +45,11 @@
 (last [1 2 3])
 
 (class short)
+
+(type short)
+
+(:a {} 5)
+
+(conj [] 1)
+(count [])
+

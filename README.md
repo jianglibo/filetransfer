@@ -14,4 +14,7 @@ start-》c开始发送头部（包含后续发送的文件的长度）-》s接�
 
 可以设置这样一个值：{:state :start|:header-parsed}，这样问题就很明显了。每次接收到buffer，看看这个阈值，如果是:start，就累积buffer，直到头的规格得到解析，然后切换到:header-parsed， 告诉c可以发送文件了，s开始接收流，程序开始收到buffer，此时因为阈值是:header-parsed，对于这些buffer不再累积在内存，直接放到磁盘文件即可。
 
+
+为了在一次链接过程中完成多个数据交换，可以将累积用的buffer放在atom中。这样每个阶段结束，可以用新的buffer开始。
+
 此程序代码就是用这种思路写成，采用clojure，当然你用vertx支持的其它语言都是一样的。

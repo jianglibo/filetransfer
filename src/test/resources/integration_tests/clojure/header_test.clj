@@ -34,6 +34,6 @@
                (core/deploy-verticle
                  "file_client.clj"
                   :config {:reply-to "test.data"
-                           :data-to-send [(short 0) (short 99) (short 6) ["abcdef" "ISO-8859-1"] (int 1000)]}))))
+                           :header-to-send [(short 0) (short 99) (short 6) ["abcdef" "ISO-8859-1"] (int 1000)]}))))
 
 (t/start-tests)

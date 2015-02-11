@@ -18,7 +18,11 @@
             [vertx.testtools :as tt]))
 
 (let [config (core/config)]
-  (tt/assert= Short (class (:short config))))
+  (tt/assert= Short (class (:short config)))
+  (tt/assert= Integer (class (:int config)))
+;;  (tt/assert= Integer (class (:buffer config))) buffer not allowed,function not allowed
+  )
 
+;;(tt/assert= short (:shortfn config)) cannot pass clojure function
 
 (eb/send "test.data" "stoped")
