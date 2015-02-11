@@ -22,6 +22,10 @@
 
 
 (defn async-file-write [path buffer how-many-times]
+  (if-not (syncfs/exists? "testdatafolder")
+    (syncfs/mkdir "testdatafolder"))
+  (if (syncfs/exists? path)
+    (syncfs/delete path))
   (let [f (syncfs/open path :read? false :write? true :flush true)
         blen (.length buffer)
         bstr (clojure.string/trim (buf/get-string buffer 0 blen "ISO-8859-1"))

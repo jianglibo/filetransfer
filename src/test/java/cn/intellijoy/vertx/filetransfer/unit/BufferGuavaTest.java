@@ -14,7 +14,7 @@ import com.google.common.io.CharSource;
 import com.google.common.io.FileWriteMode;
 import com.google.common.io.Files;
 
-public class BufferGuavaTest {
+public class BufferGuavaTest extends NeedTestDataFolder{
 
 
   @Test
