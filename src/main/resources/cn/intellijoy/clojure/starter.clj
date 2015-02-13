@@ -1,4 +1,4 @@
-(ns intellijoy.starter
+(ns cn.intellijoy.clojure.starter
   (:require [vertx.core :refer [config deploy-verticle deploy-worker-verticle]]
             [vertx.logging :as log]))
 

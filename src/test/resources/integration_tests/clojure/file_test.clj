@@ -5,8 +5,16 @@
             [vertx.stream :as stream]
             [vertx.core :as core]
             [vertx.filesystem.sync :as syncfs]
+            [cn.intellijoy.clojure.tapp-utils :as tapp-utils]
             [vertx.filesystem :as fs]
             [vertx.eventbus :as eb]))
+
+(defn test-tapp-utils []
+  (let [sampler (tapp-utils/sample-upload-data :reply-to "ttt.data" :token "hello-token" :bytes-to-send {:str-line "abc\n" :how-many 100})]
+    (t/assert= sampler {:reply-to "ttt.data"
+                        :header-to-send [(short 0) (short 0) (short 11) ["hello-token" "ISO-8859-1"] (int 400)]
+                        :bytes-to-send {:str-line "abc\n" :how-many 100 :encoding "ISO-8859-1"}})
+    (t/test-complete)))
 
 
 (defn sync-file-write [path]
@@ -37,12 +45,7 @@
                                       (if (= @done-times how-many-times)
                                         (do
                                           (fs/close f)
-                                          (let [catom (atom 0)]
-                                            (with-open [rdr (clojure.java.io/reader path)]
-                                                      (doseq [line (line-seq rdr)]
-                                                        (if-not (= bstr line)
-                                                          (swap! catom + 1))))
-                                            (t/assert= 0 @catom))
+                                          (tapp-utils/verify-file path bstr 10000)
                                           (t/test-complete
                                            (t/assert= total-len (:size (syncfs/properties path)))))))))))
 
