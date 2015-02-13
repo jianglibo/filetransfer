@@ -12,14 +12,14 @@
 
 (defn save-file
   [config sock rece-state received-bytes-atom buffer]
-  (let [fd (:send-fd @rece-state)
+  (let [asyncfile (:rec-async-file @rece-state)
         flen (get-in @rece-state [:header :file-length])]
-    (fs/write fd buffer @received-bytes-atom
+    (fs/write asyncfile buffer @received-bytes-atom
               (fn [ex]
                 (swap! received-bytes-atom + (.length buffer))
                 (if (= @received-bytes-atom flen)
                   (do
-                    (fs/close fd)
+                    (fs/close asyncfile)
                     (stream/write sock (short 0))))))))
 
 (defn create-data-handler

@@ -32,14 +32,16 @@
                (t/test-complete (t/assert-nil err)))))
 
 (defn test-upload []
-  (let [config (tapp-utils/sample-upload-data
+  (let [token "upload.data"
+        how-many 100
+        config (tapp-utils/sample-upload-data
                 :reply-to "test.data"
-                :token "upload.data"
-                :bytes-to-send {:str-line "hello\n" :how-many 100})]
+                :token token
+                :bytes-to-send {:str-line "hello\n" :how-many how-many})]
     (eb/on-message
      "test.data"
      (fn [m]
-       (tapp-utils/verify-file "testdatafolder/upload/upload.data" "hello" 100)
+       (tapp-utils/verify-file "testdatafolder/upload/upload.data" "hello" how-many)
        (t/test-complete)))
 
   (core/deploy-verticle "cn/intellijoy/clojure/file_server.clj"

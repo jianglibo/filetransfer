@@ -20,7 +20,7 @@
     :stage
     :header-length
     :header
-    :send-fd
+    :rec-async-file
   "
   [config sock buf-atom rece-state buffer]
   (swap! buf-atom buf/append! buffer)
@@ -37,7 +37,7 @@
                         :file-length (buf/get-int @buf-atom token-end)}]
             (swap! rece-state assoc :stage :header-parsed)
             (swap! rece-state assoc :header header)
-            (swap! rece-state assoc :send-fd (syncfs/open (str (:data-dir config) "/" (:token header)) :read? false :write? true :flush true))
+            (swap! rece-state assoc :rec-async-file (syncfs/open (str (:data-dir config) "/" (:token header)) :read? false :write? true :flush true))
             (reset! buf-atom (buf/buffer))
             (condp = (get-in @rece-state [:header :cmd-type])
               0 (stream/write sock (short 0)))))))))
