@@ -17,10 +17,17 @@
   (:require [vertx.testtools :as t]
             [vertx.net :as net]
             [vertx.stream :as stream]
+            [vertx.filesystem.sync :as syncfs]
             [vertx.core :as core]
             [cn.intellijoy.clojure.tapp-utils :as tapp-utils]
             [vertx.eventbus :as eb]))
 
+(defn before-test
+  []
+  (tapp-utils/delete-folder "testdatafolder")
+  (syncfs/mkdir "testdatafolder"))
+
+(before-test)
 (defn test-deploy-server []
   (core/deploy-verticle "cn/intellijoy/clojure/file_server.clj"
     :handler (fn [err deploy-id]
@@ -32,10 +39,8 @@
                (t/test-complete (t/assert-nil err)))))
 
 (defn upload [how-many]
-  (let [token "upload.data"
-        config (tapp-utils/sample-upload-data
-                :reply-to "test.data"
-                :token token
+  (let [config (tapp-utils/sample-upload-data
+                :report-to "test.data"
                 :bytes-to-send {:str-line "hello\n" :how-many how-many})]
     (eb/on-message
      "test.data"

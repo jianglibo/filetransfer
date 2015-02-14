@@ -1,3 +1,11 @@
+;;作为测试客户端，可以指定以下参数：
+;;  几个并发发送？
+;;  总共发送几个文件？
+;;  每个文件的长度？
+;;  结果如何校验？（这个在测试文件中实现）
+;;作为异步系统，着重需要注意以下几点：
+;;  什么时候才算测试结束？
+
 (ns cn.intellijoy.clojure.file-client
   (:require [vertx.net :as net]
             [vertx.core :as core]
@@ -5,6 +13,10 @@
             [vertx.buffer :as buf]
             [vertx.logging :as log]
             [vertx.stream :as stream]))
+
+(def file-count (atom 0))
+(def success-count (atom 0))
+(def failure-count (atom 0))
 
 (defn send-bytes
   "此方法会占用大量内存，不利于压力测试，但是dotimes是异步行为，什么时候发送report-to是一个问题。"
@@ -34,10 +46,14 @@
                        (let [res (buf/get-short @buf-atom 0)]
                          (swap! rece-state assoc :stage :header-parsed)
                          (reset! buf-atom (buf/buffer))
-                         (.close sock)
                          (if (= res (short 0))
-                           (eb/send report-to "upload-success")
-                           (eb/send report-to "upload-failure"))))
+                           (swap! success-count + 1)
+                           (swap! failure-count + 1))
+
+                         (.close sock)
+                         (swap! file-count - 1)
+                         (if-not (> @file-count 0)
+                           (eb/send report-to "done"))))
       nil)))
 
 
@@ -54,15 +70,17 @@
           (stream/on-drain #(.resume sock)))))))
 
 (defn send-header
-  [sock dv]
-  (log/info "start send header...")
-  (log/info dv)
-  (doall
-    (map
-      (fn [d]
-        (condp = (class d)
-          clojure.lang.PersistentVector (stream/write sock (d 0) (d 1))
-          (stream/write sock d))) dv)))
+  "因为需要多文件并发测试，每个文件名必须不同，不能预先设定，最好的办法是用uuid。"
+  [sock header-map]
+  (let [token (.toString (java.util.UUID/randomUUID))
+        tbytes (.getBytes token "ISO-8859-1")
+        tlen (count (seq tbytes))
+        {:keys [tag cmd-type file-len]} header-map]
+    (stream/write sock tag)
+    (stream/write sock cmd-type)
+    (stream/write sock (short tlen))
+    (stream/write sock tbytes)
+    (stream/write sock file-len)))
 
 (defn fire-one
   "fire one connect,
@@ -73,17 +91,28 @@
       :report-to
       :header-to-send
       :bytes-to-send {:str-line 'abc\n' :how-many 1000 :encoding 'ISO-8859-1'}
+      :concurrent-files
+      :total-files
       "
 [config]
     (-> (net/client)
-        (net/connect 1234 "localhost"
+        (net/connect (:port config) (:host config)
           (fn [err sock]
             (if-not err
               (do
-                (log/info "client fired.")
+                (log/info (str "client fired. Thread Id: " (-> (Thread/currentThread) .getId)))
                 (stream/on-data sock (create-data-handler config sock))
                 (send-header sock (:header-to-send config)))
               (log/error err))))))
 
+;;要达成这样一种效果：
+;;开始时启动并发个数的链接，然后当一个链接结束时，启动一个新的链接，使得连接数保持在指定的并发数。
 (let [config (core/config)]
-  (fire-one config))
+    (reset! file-count (:total-files config))
+    (dotimes [_ (:concurrent-files config)]
+      (fire-one config))
+  (add-watch file-count :upload-end-listener
+             (fn [k r oldv newv]
+               (fire-one config))))
+
+(log/info (str "file-client verticle started. Thread Id: " (-> (Thread/currentThread) .getId)))

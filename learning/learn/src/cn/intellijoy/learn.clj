@@ -94,3 +94,14 @@
 
 (get-in [0 1 2 [3 4]] [3 1])
 
+(def aa (atom 0))
+
+(-> (Thread/currentThread) .getId)
+
+(add-watch aa :akey (fn
+                      [k r oldv newv]
+                      (println (-> (Thread/currentThread) .getId))
+                      (println oldv)
+                      (println newv)))
+
+(swap! aa + 1)

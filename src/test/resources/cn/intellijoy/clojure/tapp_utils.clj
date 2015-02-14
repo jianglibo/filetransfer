@@ -1,5 +1,6 @@
 (ns cn.intellijoy.clojure.tapp-utils
-  (:require [vertx.testtools :as t]))
+  (:require [vertx.testtools :as t]
+            [vertx.filesystem.sync :as syncfs]))
 
 (defn sample-upload-data
   "头部的长度由token决定，
@@ -8,23 +9,41 @@
       :str-line
       :how-many
   "
-  [& {:keys [report-to token bytes-to-send] :or {report-to "test.data"}}]
-  (let [tlen (count (seq (.getBytes token "ISO-8859-1")))
-        flen (* (:how-many bytes-to-send) (count (seq (.getBytes (:str-line bytes-to-send) "ISO-8859-1"))))]
+  [& {:keys [report-to bytes-to-send concurrent-files total-files port host]
+      :or
+      {report-to "test.data" concurrent-files 1 total-files 1 host "localhost" port 1234}}]
+  (let [flen (* (:how-many bytes-to-send) (count (seq (.getBytes (:str-line bytes-to-send) "ISO-8859-1"))))]
     {:report-to report-to
-     :header-to-send [(short 0) (short 0) (short tlen) [token "ISO-8859-1"] (int flen)]
-     :bytes-to-send {:str-line (:str-line bytes-to-send) :how-many (:how-many bytes-to-send) :encoding "ISO-8859-1"}}))
+     :header-to-send {:tag (short 0) :cmd-type (short 0) :file-len (int flen)}
+     :bytes-to-send {:str-line (:str-line bytes-to-send) :how-many (:how-many bytes-to-send) :encoding "ISO-8859-1"}
+     :concurrent-files concurrent-files
+     :total-files total-files
+     :port port
+     :host host}))
 
 
 (defn verify-file
   "检测上传的文件是否正确"
   [path str-line how-many]
-   (let [err-lines (atom 0)
-         total-lines (atom 0)]
-     (with-open [rdr (clojure.java.io/reader path)]
-       (doseq [line (line-seq rdr)]
-         (if-not (= str-line line)
-           (swap! err-lines + 1))
-         (swap! total-lines + 1)))
-     (t/assert= how-many @total-lines)
-     (t/assert= 0 @err-lines)))
+  (dorun [p (syncfs/read-dir path)]
+         (let [err-lines (atom 0)
+               total-lines (atom 0)]
+           (with-open [rdr (clojure.java.io/reader p)]
+             (doseq [line (line-seq rdr)]
+               (if-not (= str-line line)
+                 (swap! err-lines + 1))
+               (swap! total-lines + 1)))
+           (t/assert= how-many @total-lines)
+           (t/assert= 0 @err-lines))))
+
+
+(defn delete-file
+  ([path]
+   (delete-file path false))
+  ([path recursive?]
+  (if (syncfs/exists? path)
+    (syncfs/delete path recursive?))))
+
+(defn delete-folder
+  [path]
+  (delete-file path true))
