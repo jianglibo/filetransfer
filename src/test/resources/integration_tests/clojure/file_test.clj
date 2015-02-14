@@ -10,8 +10,8 @@
             [vertx.eventbus :as eb]))
 
 (defn test-tapp-utils []
-  (let [sampler (tapp-utils/sample-upload-data :reply-to "ttt.data" :token "hello-token" :bytes-to-send {:str-line "abc\n" :how-many 100})]
-    (t/assert= sampler {:reply-to "ttt.data"
+  (let [sampler (tapp-utils/sample-upload-data :report-to "ttt.data" :token "hello-token" :bytes-to-send {:str-line "abc\n" :how-many 100})]
+    (t/assert= sampler {:report-to "ttt.data"
                         :header-to-send [(short 0) (short 0) (short 11) ["hello-token" "ISO-8859-1"] (int 400)]
                         :bytes-to-send {:str-line "abc\n" :how-many 100 :encoding "ISO-8859-1"}})
     (t/test-complete)))

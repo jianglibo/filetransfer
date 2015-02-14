@@ -7,15 +7,13 @@
             [vertx.stream :as stream]))
 
 (defn send-bytes
-  "此方法会占用大量内存，不利于压力测试，但是dotimes是异步行为，什么时候发送reply-to是一个问题。"
+  "此方法会占用大量内存，不利于压力测试，但是dotimes是异步行为，什么时候发送report-to是一个问题。"
   [sock config]
   (let [bytes-to-send (:bytes-to-send config)
         {:keys [str-line how-many encoding] :or {encoding "ISO-8859-1"}} bytes-to-send
         buf (buf/buffer str-line encoding)]
     (dotimes [_ how-many]
-      (stream/write sock buf))
-    (if-let [reply-to (:reply-to config)]
-      (eb/send reply-to "done"))))
+      (stream/write sock buf)) ))
 
 (defn start-interact
   "如果目前在:start阶段，收到2个字节，0表示接下来上传文件，1表示出错了。
@@ -23,8 +21,9 @@
   "
   [config sock buf-atom rece-state buffer]
   (swap! buf-atom buf/append! buffer)
-  (let [len (.length @buf-atom)]
-    (condp = (:stage @rece-state)
+  (let [len (.length @buf-atom)
+        report-to (:report-to config)]
+    (condp = (:stage @rece-state "reporter")
       :start  (if (= len 2)
                 (let [res (buf/get-short @buf-atom 0)]
                   (swap! rece-state assoc :stage :header-parsed)
@@ -35,9 +34,10 @@
                        (let [res (buf/get-short @buf-atom 0)]
                          (swap! rece-state assoc :stage :header-parsed)
                          (reset! buf-atom (buf/buffer))
+                         (.close sock)
                          (if (= res (short 0))
-                           (.close sock)
-                           (.close sock))))
+                           (eb/send report-to "upload-success")
+                           (eb/send report-to "upload-failure"))))
       nil)))
 
 
@@ -70,7 +70,7 @@
       :start
       :header-parsed
   config:
-      :reply-to
+      :report-to
       :header-to-send
       :bytes-to-send {:str-line 'abc\n' :how-many 1000 :encoding 'ISO-8859-1'}
       "

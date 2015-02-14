@@ -8,10 +8,10 @@
       :str-line
       :how-many
   "
-  [& {:keys [reply-to token bytes-to-send] :or {reply-to "test.data"}}]
+  [& {:keys [report-to token bytes-to-send] :or {report-to "test.data"}}]
   (let [tlen (count (seq (.getBytes token "ISO-8859-1")))
         flen (* (:how-many bytes-to-send) (count (seq (.getBytes (:str-line bytes-to-send) "ISO-8859-1"))))]
-    {:reply-to reply-to
+    {:report-to report-to
      :header-to-send [(short 0) (short 0) (short tlen) [token "ISO-8859-1"] (int flen)]
      :bytes-to-send {:str-line (:str-line bytes-to-send) :how-many (:how-many bytes-to-send) :encoding "ISO-8859-1"}}))
 

@@ -11,27 +11,35 @@
 
 
 (defn save-file
-  [config sock rece-state received-bytes-atom buffer]
+  "收到多少字节，用来决定写入文件的位置，
+  写入多少字节到文件用来决定真正的上传成功。"
+  [config sock rece-state received-bytes-atom writen-bytes-atom buffer]
   (let [asyncfile (:rec-async-file @rece-state)
-        flen (get-in @rece-state [:header :file-length])]
-    (fs/write asyncfile buffer @received-bytes-atom
+        flen (get-in @rece-state [:header :file-length])
+        pos @received-bytes-atom
+        blen (.length buffer)]
+    (swap! received-bytes-atom + blen)
+    (fs/write asyncfile buffer pos
               (fn [ex]
-                (swap! received-bytes-atom + (.length buffer))
-                (if (= @received-bytes-atom flen)
-                  (do
-                    (fs/close asyncfile)
-                    (stream/write sock (short 0))))))))
+                (swap! writen-bytes-atom + blen)
+                (if (= @writen-bytes-atom flen)
+                  (fs/close asyncfile
+                            (fn [exm]
+                              (if exm
+                                (log/error exm)
+                                (stream/write sock (short 0))))))))))
 
 (defn create-data-handler
-  "handle all received buffers."
+  "返回一个函数，这个函数引用了环境变量，相当于closure"
   [config sock]
   (let [buf-atom (atom (buf/buffer))
         rece-state (atom {:stage :start})
-        received-bytes-atom (atom 0)]
+        received-bytes-atom (atom 0)
+        writen-bytes-atom (atom 0)]
     (fn [buffer]
       (condp = (:stage @rece-state)
         :start (fsi/parse-header config sock buf-atom rece-state buffer)
-        :header-parsed (save-file config sock rece-state received-bytes-atom buffer))
+        :header-parsed (save-file config sock rece-state received-bytes-atom writen-bytes-atom buffer))
       (if (.writeQueueFull sock)
         (do
           (.pause sock)

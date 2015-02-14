@@ -31,9 +31,8 @@
     :handler (fn [err deploy-id]
                (t/test-complete (t/assert-nil err)))))
 
-(defn test-upload []
+(defn upload [how-many]
   (let [token "upload.data"
-        how-many 100
         config (tapp-utils/sample-upload-data
                 :reply-to "test.data"
                 :token token
@@ -47,5 +46,11 @@
   (core/deploy-verticle "cn/intellijoy/clojure/file_server.clj"
     :handler (fn [err deploy-id]
                (core/deploy-verticle "cn/intellijoy/clojure/file_client.clj" :config config)))))
+
+(defn test-upload-100 []
+  (upload 100))
+
+(defn test-upload-10000 []
+  (upload 10000))
 
 (t/start-tests)
