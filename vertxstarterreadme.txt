@@ -28,7 +28,7 @@ mvn -Dtest=TestCircle#mytest test
 mvn test -Dtest=JavaScriptIntegrationTests
 mvn test -Dtest=ClojureScriptIntegrationTests
 
-mvn -Dit.test=ClojureScriptIntegrationTests verify
+mvn -Dit.test=ThreadTest verify
 #ITCircle#testOne+testTwo
 
 

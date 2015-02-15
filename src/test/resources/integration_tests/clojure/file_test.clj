@@ -11,12 +11,7 @@
             [vertx.eventbus :as eb]))
 
 
-(defn before-test
-  []
-  (tapp-utils/delete-folder "testdatafolder")
-  (syncfs/mkdir "testdatafolder"))
-
-(before-test)
+(tapp-utils/before-test)
 
 (defn test-tapp-utils []
   (let [sampler (tapp-utils/sample-upload-data :report-to "ttt.data" :bytes-to-send {:str-line "abc\n" :how-many 100})]

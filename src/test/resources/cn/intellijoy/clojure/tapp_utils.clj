@@ -1,5 +1,6 @@
 (ns cn.intellijoy.clojure.tapp-utils
   (:require [vertx.testtools :as t]
+            [vertx.logging :as log]
             [vertx.filesystem.sync :as syncfs]))
 
 (defn sample-upload-data
@@ -22,10 +23,10 @@
      :host host}))
 
 
-(defn verify-file
+(defn verify-files
   "检测上传的文件是否正确"
   [path str-line how-many]
-  (dorun [p (syncfs/read-dir path)]
+  (doseq [p (syncfs/read-dir path)]
          (let [err-lines (atom 0)
                total-lines (atom 0)]
            (with-open [rdr (clojure.java.io/reader p)]
@@ -37,13 +38,20 @@
            (t/assert= 0 @err-lines))))
 
 
-(defn delete-file
-  ([path]
-   (delete-file path false))
-  ([path recursive?]
-  (if (syncfs/exists? path)
-    (syncfs/delete path recursive?))))
 
 (defn delete-folder
   [path]
-  (delete-file path true))
+  (if (syncfs/exists? path)
+    (do
+      (doseq [p (syncfs/read-dir path)]
+              (if (:regular-file? (syncfs/properties p))
+                (syncfs/delete p)
+                (delete-folder p))))))
+
+
+(defn before-test
+  []
+  (let [path "testdatafolder"]
+    (delete-folder path)
+    (if-not (syncfs/exists? path)
+      (syncfs/mkdir path))))

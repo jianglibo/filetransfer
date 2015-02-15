@@ -22,30 +22,16 @@
             [cn.intellijoy.clojure.tapp-utils :as tapp-utils]
             [vertx.eventbus :as eb]))
 
-(defn before-test
-  []
-  (tapp-utils/delete-folder "testdatafolder")
-  (syncfs/mkdir "testdatafolder"))
-
-(before-test)
-(defn test-deploy-server []
-  (core/deploy-verticle "cn/intellijoy/clojure/file_server.clj"
-    :handler (fn [err deploy-id]
-               (t/test-complete (t/assert-nil err)))))
-
-(defn test-deploy-client []
-  (core/deploy-verticle "cn/intellijoy/clojure/file_client.clj"
-    :handler (fn [err deploy-id]
-               (t/test-complete (t/assert-nil err)))))
 
 (defn upload [how-many]
+  (tapp-utils/before-test)
   (let [config (tapp-utils/sample-upload-data
                 :report-to "test.data"
                 :bytes-to-send {:str-line "hello\n" :how-many how-many})]
     (eb/on-message
      "test.data"
      (fn [m]
-       (tapp-utils/verify-file "testdatafolder/upload/upload.data" "hello" how-many)
+       (tapp-utils/verify-files "testdatafolder/upload" "hello" how-many)
        (t/test-complete)))
 
   (core/deploy-verticle "cn/intellijoy/clojure/file_server.clj"
