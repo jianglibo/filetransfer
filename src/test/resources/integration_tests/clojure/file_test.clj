@@ -17,6 +17,10 @@
   (let [sampler (tapp-utils/sample-upload-data :report-to "ttt.data" :bytes-to-send {:str-line "abc\n" :how-many 100})]
     (t/assert= sampler {:report-to "ttt.data"
                         :header-to-send {:tag (short 0) :cmd-type (short 0) :file-len (int 400)}
+                        :concurrent-files 1
+                        :total-files 1
+                        :port 1234
+                        :host "localhost"
                         :bytes-to-send {:str-line "abc\n" :how-many 100 :encoding "ISO-8859-1"}})
     (t/test-complete)))
 
@@ -44,7 +48,7 @@
                                       (if (= @done-times how-many-times)
                                         (do
                                           (fs/close f)
-                                          (tapp-utils/verify-file path bstr 10000)
+                                          (tapp-utils/verify-files path bstr 10000)
                                           (t/test-complete
                                            (t/assert= total-len (:size (syncfs/properties path)))))))))))
 
@@ -60,5 +64,19 @@
                "ISO-8859-1") 10000))
 
 
+(defn test-filesystem
+  "read-dir only read one level."
+  []
+  (syncfs/mkdir "testdatafolder/a/b/c/d" true)
+  (syncfs/write-file "testdatafolder/a/a.txt" "a")
+  (syncfs/write-file "testdatafolder/a/b/b.txt" "b")
+  (syncfs/write-file "testdatafolder/a/b/c/c.txt" "c")
+  (syncfs/write-file "testdatafolder/a/b/c/d/d.txt" "d")
+  (t/assert (syncfs/exists? "testdatafolder/a/b/c/d/d.txt"))
+  (t/assert= (int 2) (count (syncfs/read-dir "testdatafolder/a")))
+  (tapp-utils/delete-folder "testdatafolder/a/a.txt")
+  (tapp-utils/delete-folder "testdatafolder/a")
+  (t/assert (not (syncfs/exists? "testdatafolder/a/b/c/d/d.txt")))
+  (t/test-complete))
 
 (t/start-tests)

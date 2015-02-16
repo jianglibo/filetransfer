@@ -105,3 +105,5 @@
                       (println newv)))
 
 (swap! aa + 1)
+
+(class (alength (.getBytes "abc")))

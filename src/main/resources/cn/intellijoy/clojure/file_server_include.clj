@@ -40,4 +40,4 @@
             (swap! rece-state assoc :rec-async-file (syncfs/open (str (:data-dir config) "/" (:token header)) :read? false :write? true :flush true))
             (reset! buf-atom (buf/buffer))
             (condp = (get-in @rece-state [:header :cmd-type])
-              0 (stream/write sock (short 0)))))))))
+              (short 0) (stream/write sock (short 0)))))))))

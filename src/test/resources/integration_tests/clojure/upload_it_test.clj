@@ -13,7 +13,7 @@
 ;; limitations under the License.
 ;; 注意core/deploy-verticle 的参数是clj文件的路径，而不是clojure的ns
 
-(ns integration.clojure.upload-test
+(ns integration.clojure.upload-it-test
   (:require [vertx.testtools :as t]
             [vertx.net :as net]
             [vertx.stream :as stream]
@@ -23,8 +23,9 @@
             [vertx.eventbus :as eb]))
 
 
+(tapp-utils/before-test)
+
 (defn upload [how-many]
-  (tapp-utils/before-test)
   (let [config (tapp-utils/sample-upload-data
                 :report-to "test.data"
                 :bytes-to-send {:str-line "hello\n" :how-many how-many})]
