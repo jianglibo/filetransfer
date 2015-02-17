@@ -5,6 +5,8 @@
             [vertx.stream :as stream]
             [vertx.core :as core]
             [vertx.logging :as log]
+            [vertx.filesystem :as fs]
+            [vertx.filesystem.sync :as syncfs]
             [cn.intellijoy.clojure.tapp-utils :as tapp-utils]
             [cn.intellijoy.clojure.file-server-include :as fsi]
             [vertx.eventbus :as eb])
@@ -30,7 +32,8 @@
     (t/assert= (+ 10 tlen) (:header-length @rece-state))
     (t/assert= (short 0) (get-in @rece-state [:header :cmd-type]))
     (t/assert= :header-parsed (:stage @rece-state))
-    (t/assert= (short 0) (buf/get-short (first (.getBuffers sock)) 0))))
+    (t/assert= (short 0) (buf/get-short (first (.getBuffers sock)) 0))
+    (.close (:rec-async-file @rece-state))))
 
 (defn test-header-parser
   []
@@ -38,5 +41,16 @@
   (header-parser "hello-diis-3829-dskdis923sdj")
   (t/test-complete))
 
+(defn test-apply-default-cfg
+  []
+  (let [nc (fsi/apply-default-cfg {})]
+    (t/assert= "testdatafolder/upload" (:data-dir nc))
+    (t/assert (syncfs/exists? "testdatafolder/upload")))
+
+  (let [nc (fsi/apply-default-cfg {:data-dir "testdatafolder/upload_100"})]
+    (t/assert= "testdatafolder/upload_100" (:data-dir nc))
+    (t/assert (syncfs/exists? "testdatafolder/upload_100")))
+
+  (t/test-complete))
 
 (t/start-tests)

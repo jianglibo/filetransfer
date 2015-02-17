@@ -41,3 +41,21 @@
             (reset! buf-atom (buf/buffer))
             (condp = (get-in @rece-state [:header :cmd-type])
               (short 0) (stream/write sock (short 0)))))))))
+
+(defn a-d-c
+  [oc]
+  (reduce
+   (fn [r item]
+     (if-not ((item 0) r)
+       (assoc r (item 0) (item 1))
+       r))
+   oc {:host "localhost" :port 1234 :data-dir "testdatafolder/upload"}))
+
+(defn apply-default-cfg
+  [origin-cfg]
+  (let [new-config (if origin-cfg
+                     (a-d-c origin-cfg)
+                     (a-d-c {}))]
+    (if-not (syncfs/exists? (:data-dir new-config))
+      (syncfs/mkdir (:data-dir new-config) true))
+    new-config))

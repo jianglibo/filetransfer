@@ -57,16 +57,5 @@
                       (stream/on-data sock (create-data-handler config sock))))
     (net/listen (:port config) (:host config))))
 
-(defn apply-default-cfg
-  [origin-cfg]
-  (log/info "apply default config.")
-  (let [new-config (reduce
-                    (fn [r item]
-                      (if-not ((item 0) r)
-                        (assoc r (item 0) (item 1))))
-                    {} {:host "localhost" :port 1234 :data-dir "testdatafolder/upload"})]
-    (if-not (syncfs/exists? (:data-dir new-config))
-      (syncfs/mkdir (:data-dir new-config) true))
-    new-config))
 
-(start-server (apply-default-cfg (core/config)))
+(start-server (fsi/apply-default-cfg (core/config)))

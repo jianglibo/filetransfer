@@ -107,3 +107,10 @@
 (swap! aa + 1)
 
 (class (alength (.getBytes "abc")))
+
+(def c (atom 0))
+
+(swap! c - 1)
+@c
+
+(if nil 1 2)

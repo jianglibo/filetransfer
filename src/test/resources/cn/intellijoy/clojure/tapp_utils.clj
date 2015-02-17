@@ -46,7 +46,6 @@
 
 (defn delete-files
   [path]
-  (log/info (str "deleting file:" path))
   (if (:regular-file? (syncfs/properties path))
     (syncfs/delete path)
     (do
@@ -64,8 +63,11 @@
         (syncfs/delete path true)))))
 
 (defn before-test
-  []
-  (let [path "testdatafolder"]
-    (delete-folder path)
-    (if-not (syncfs/exists? path)
-      (syncfs/mkdir (str path "/upload") true))))
+  ([]
+   (before-test "upload"))
+  ([subdir]
+   (let [path "testdatafolder"]
+     (log/info "calling before-test.......................")
+     (delete-folder path)
+     (if-not (syncfs/exists? path)
+       (syncfs/mkdir (str path "/" subdir) true)))))
