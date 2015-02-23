@@ -1,4 +1,4 @@
-(ns cn.intellijoy.learn)
+(ns cn.intellGijoy.learn)
 
 (defn foo
   "I don't do a whole lot."
@@ -114,3 +114,4 @@
 @c
 
 (if nil 1 2)
+

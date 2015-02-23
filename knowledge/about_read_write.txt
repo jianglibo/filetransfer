@@ -1,0 +1,41 @@
+从程序的角度来说，从客户端开始，涉及的流程如下：
+
+粗粒度来看：
+	客户端：
+		从磁盘读取，写入socket
+	服务器端：
+		从socket读入，写入磁盘
+
+仔细分析，存在不少细节问题：
+1、客户端读取文件太快，socket写入来不及怎么办？
+2、服务器端接收太快，来不及写入文件怎么办？
+
+客户端必须根据socket的情况，可以控制读取文件的暂停和继续。
+
+NetServer server = vertx.createNetServer();
+
+server.connectHandler(new Handler<NetSocket>() {
+    public void handle(final NetSocket sock) {
+
+        sock.dataHandler(new Handler<Buffer>() {
+            public void handle(Buffer buffer) {
+                sock.write(buffer);
+                if (sock.writeQueueFull()) {//
+                    sock.pause();
+                    sock.drainHandler(new VoidHandler() {
+                        public void handle() {
+                            sock.resume();
+                        }
+                    });
+                }
+            }
+        });
+
+    }
+}).listen(1234, "localhost");
+
+查看源代码就可以看到，每次write，必定会呼叫checkDrained方法，同时drainHandler方法也会呼叫checkDrained方法，所以上面的代码你不用担心sock.pause之后，resume没有机会得到执行。
+上面的代码将drainHandler放在dataHandler里面是否也有这方面的考虑呢？直接将drainHandler写在和dataHandler并列的位置看起来似乎更加简洁？但是没有了writeQueueFull的判断，不管情况如何都会执行checkDrained
+方法。是否因为常规应用中writeQueueFull很少会返回真，所以采用这种写法更加高效？
+
+作为发送者，必须能够被控制（暂停，恢复），作为接收者，必须能够被查询状态（满了吗？）

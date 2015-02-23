@@ -19,3 +19,13 @@
 
 
 (.hashCode @datom)
+
+
+
+(def cc (atom 10))
+
+(loop []
+  (println @cc)
+  (if (< (swap! cc - 1) 1)
+    nil
+    (recur)))

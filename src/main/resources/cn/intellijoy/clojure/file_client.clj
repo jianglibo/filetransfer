@@ -28,7 +28,7 @@
     (dotimes [_ how-many]
       (stream/write sock buf)) ))
 
-(defn start-interact
+(defn start-interact-old
   "如果目前在:start阶段，收到2个字节，0表示接下来上传文件，1表示出错了。
   如果在:header-parsed阶段，收到2个字节，0表示上传成功，1表示上传失败。
   当file-count到达1的时候，不应该再swap!它的值了。
@@ -59,17 +59,50 @@
       nil)))
 
 
+(defn start-interact
+  "如果目前在:start阶段，收到2个字节，0表示接下来上传文件，1表示出错了。
+  如果在:header-parsed阶段，收到2个字节，0表示上传成功，1表示上传失败。
+  当file-count到达1的时候，不应该再swap!它的值了。
+  "
+  [config sock buf-atom rece-state mbs buffer]
+  (swap! buf-atom buf/append! buffer)
+  (let [len (.length @buf-atom)
+        report-to (:report-to config)]
+    (condp = (:stage @rece-state "reporter")
+      :start  (if (= len 2)
+                (let [res (buf/get-short @buf-atom 0)]
+                  (swap! rece-state assoc :stage :header-parsed)
+                  (reset! buf-atom (buf/buffer))
+                  (if (= res (short 0))
+                    (.startRead mbs))))
+      :header-parsed (if (= len 2)
+                       (let [res (buf/get-short @buf-atom 0)]
+                         (swap! rece-state assoc :stage :header-parsed)
+                         (reset! buf-atom (buf/buffer))
+                         (if (= res (short 0))
+                           (swap! success-count + 1)
+                           (swap! failure-count + 1))
+                         (.close sock)
+                         (if (= @file-count 1)
+                           (eb/send report-to {:success-count @success-count :failure-count @failure-count}))
+                         (if (> @file-count 1)
+                           (swap! file-count - 1))))
+      nil)))
+
+
 (defn create-data-handler
-  "handle all received buffers."
+  "需要一个buffer atom来存储接收到的字节流，用atom，这样可以被reset。
+  需要一个跟踪接受状态的atom，根据不同的值，采取不同的动作。
+  需要一个MockByteSource来可控地发送字节。"
   [config sock]
-  (let [buf-atom (atom (buf/buffer)) rece-state (atom {:stage :start})]
+  (let [buf-atom (atom (buf/buffer)) rece-state (atom {:stage :start}) mbs (cn.intellijoy.clojure.file-client-include.MockByteSource. (atom 0) (atom false) sock config)]
     (fn [buffer]
       (log/info (str "receive from server." (.length buffer)))
-      (start-interact config sock buf-atom rece-state buffer)
+      (start-interact config sock buf-atom rece-state mbs buffer)
       (if (.writeQueueFull sock)
         (do
-          (.pause sock)
-          (stream/on-drain #(.resume sock)))))))
+          (.pause mbs)
+          (stream/on-drain #(.resume mbs)))))))
 
 
 (defn fire-one
