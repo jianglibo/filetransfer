@@ -14,6 +14,6 @@
       (t/assert= "stoped" m))))
 
   (core/deploy-verticle "config_verticle.clj"
-                        :config {:short (short 5) :int (int 100) :buffer (buf/buffer)}))
-
+                        :config {:short (short 5) :int (int 100)}))
+;;buffer cannot put to jsonObject.
 (t/start-tests)

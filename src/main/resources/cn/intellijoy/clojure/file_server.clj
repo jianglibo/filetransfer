@@ -10,9 +10,10 @@
             [vertx.stream :as stream]))
 
 
-(defn save-file
+(defn save-file-old
   "收到多少字节，用来决定写入文件的位置，
-  写入多少字节到文件用来决定真正的上传成功。"
+  写入多少字节到文件用来决定真正的上传成功。
+  当sock过来的速度太快，asyncfile来不及写入到磁盘，暂停sock，让后等待asyncfile的drain信息过来时，恢复sock"
   [config sock rece-state received-bytes-atom writen-bytes-atom buffer]
   (let [asyncfile (:rec-async-file @rece-state)
         flen (get-in @rece-state [:header :file-length])
@@ -27,8 +28,42 @@
                             (fn [exm]
                               (if exm
                                 (log/error exm)
-                                (stream/write sock (short 0))))))))))
+                                (stream/write sock (short 0))))))))
+    (if (.writeQueueFull asyncfile)
+        (do
+          (.pause sock)
+          (log/info "server asycfile .writeQueueFull. sock paused.")
+          (stream/on-drain asyncfile #(do
+                                        (.resume sock)
+                                        (log/info "server asyncfile drained, sock resumed.")))))))
 
+(defn save-file
+  "收到多少字节，用来决定写入文件的位置，
+  写入多少字节到文件用来决定真正的上传成功。
+  当sock过来的速度太快，asyncfile来不及写入到磁盘，暂停sock，让后等待asyncfile的drain信息过来时，恢复sock,
+  save-file-old的错误在于使用了asyncfile的write，而不是stream的write，stream的write本身就已经维护了position的状态。
+  脱离了stream的环境，on-drain就不会被正确调用，导致sock始终挂起。"
+  [config sock rece-state received-bytes-atom writen-bytes-atom buffer]
+  (let [asyncfile (:rec-async-file @rece-state)
+        flen (get-in @rece-state [:header :file-length])
+        pos @received-bytes-atom
+        blen (.length buffer)]
+    (stream/write asyncfile buffer)
+    (swap! received-bytes-atom + blen)
+    (swap! writen-bytes-atom + blen)
+    (if (= @writen-bytes-atom flen)
+      (fs/close asyncfile
+                (fn [exm]
+                  (if exm
+                    (log/error exm)
+                    (stream/write sock (short 0)))))
+      (if (.writeQueueFull asyncfile)
+        (do
+          (.pause sock)
+          (log/info "server asycfile .writeQueueFull. sock paused.")
+          (stream/on-drain asyncfile #(do
+                                        (.resume sock)
+                                        (log/info "server asyncfile drained, sock resumed."))))))))
 (defn create-data-handler
   "返回一个函数，这个函数引用了环境变量，相当于closure"
   [config sock]
@@ -39,11 +74,7 @@
     (fn [buffer]
       (condp = (:stage @rece-state)
         :start (fsi/parse-header config sock buf-atom rece-state buffer)
-        :header-parsed (save-file config sock rece-state received-bytes-atom writen-bytes-atom buffer))
-      (if (.writeQueueFull sock)
-        (do
-          (.pause sock)
-          (stream/on-drain #(.resume sock)))))))
+        :header-parsed (save-file config sock rece-state received-bytes-atom writen-bytes-atom buffer)))))
 
 (defn start-server
   "config:

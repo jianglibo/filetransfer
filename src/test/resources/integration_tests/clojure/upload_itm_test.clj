@@ -11,20 +11,22 @@
 
 (tapp-utils/before-test)
 
-(defn upload [ & {:keys [how-many concurrent-files total-files data-dir] :or {concurrent-files 1 total-files 1 data-dir "testdatafolder/upload"}}]
-  (let [client-config (tapp-utils/sample-upload-data
+
+(defn upload [ & {:keys [how-many concurrent-files total-files data-dir] :or {concurrent-files 1 total-files 1}}]
+  (let [rand-line (reduce #(str %1 %2) (take 100 (repeatedly rand)))
+        client-config (tapp-utils/sample-upload-data
                 :report-to "test.data"
                 :concurrent-files concurrent-files
                 :total-files total-files
-                :bytes-to-send {:str-line "hello\n" :how-many how-many})
+                :bytes-to-send {:str-line (str rand-line "\n") :how-many how-many})
+        data-dir (str "testdatafolder/upload_" how-many "_" concurrent-files)
         server-config {:data-dir data-dir}]
     (eb/on-message
-     (:report-to client-config)
+     "test.data"
      (fn [m]
-       (log/info (str "yyyyyyyyyyyyyyyyyyyyy" m))
        (t/assert= 10 (:success-count m))
        (t/assert= 0 (:failure-count m))
-       (tapp-utils/verify-files data-dir "hello" how-many)
+       (tapp-utils/verify-files data-dir rand-line how-many)
        (t/assert= (int total-files) (count (syncfs/read-dir data-dir)))
        (t/test-complete)))
 
@@ -32,9 +34,8 @@
     :handler (fn [err deploy-id]
                (core/deploy-verticle "cn/intellijoy/clojure/file_client.clj" :config client-config)))))
 
-
 (defn test-upload-10000-10 []
-  (upload :how-many 10000 :concurrent-files 3 :total-files 10 :data-dir "testdatafolder/upload_10000_10"))
+  (upload :how-many 10000 :concurrent-files 3 :total-files 10))
 
 
 (t/start-tests)

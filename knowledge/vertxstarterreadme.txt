@@ -31,6 +31,8 @@ mvn test -Dtest=ClojureScriptIntegrationTests
 mvn -Dit.test=ThreadTest verify
 #ITCircle#testOne+testTwo
 
+-Dtest.timeout=60 单位s
+
 
 在集成测试环境下，classpath包含了target目录，但是直接vertx run raw verticle情况下，这些classpath都没有设置好，会启动失败。
 

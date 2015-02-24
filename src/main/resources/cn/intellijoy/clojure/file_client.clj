@@ -93,16 +93,15 @@
 (defn create-data-handler
   "需要一个buffer atom来存储接收到的字节流，用atom，这样可以被reset。
   需要一个跟踪接受状态的atom，根据不同的值，采取不同的动作。
-  需要一个MockByteSource来可控地发送字节。"
+  需要一个MockByteSource来可控地发送字节。
+  如果因为程序写入到sock过快，引起sock的.writeQueueFull，就请MockByteSource暂停，当sock通知drain时再通知MockByteSource重新发送"
+
   [config sock]
-  (let [buf-atom (atom (buf/buffer)) rece-state (atom {:stage :start}) mbs (cn.intellijoy.clojure.file-client-include.MockByteSource. (atom 0) (atom false) sock config)]
+  (let [buf-atom (atom (buf/buffer))
+        rece-state (atom {:stage :start})
+        mbs (fci/->MockByteSource (atom 0) (atom false) sock config)]
     (fn [buffer]
-      (log/info (str "receive from server." (.length buffer)))
-      (start-interact config sock buf-atom rece-state mbs buffer)
-      (if (.writeQueueFull sock)
-        (do
-          (.pause mbs)
-          (stream/on-drain #(.resume mbs)))))))
+      (start-interact config sock buf-atom rece-state mbs buffer))))
 
 
 (defn fire-one
@@ -136,7 +135,7 @@
   (reset! file-count (:total-files config))
   (add-watch file-count :upload-end-listener
              (fn [k r oldv newv]
-               (log/info (str "watch be called ........" newv))
+;;               (log/info (str "watch be called ........" newv))
                (if (>= newv cf)
                  (fire-one config))))
   (dotimes [_ cf]

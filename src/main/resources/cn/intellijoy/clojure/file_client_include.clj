@@ -19,6 +19,9 @@
     (stream/write sock tbytes)
     (stream/write sock file-len)))
 
+(defn log-num [n]
+  (if (= 0 (mod n 100))
+    (log/info n)))
 
 (defprotocol ByteSourceProt
   (pause [this])
@@ -27,20 +30,30 @@
 
 (deftype MockByteSource [num-atom paused-flag sock config]
   ByteSourceProt
-  (pause [this] (swap! paused-flag true))
+  (pause [this] (swap! paused-flag not))
   (resume [this] (do
-                   (swap! paused-flag false)
-                   (start-read)))
+                   (swap! paused-flag not)
+                   (.startRead this)))
   (startRead [this]
               (let [bytes-to-send (:bytes-to-send config)
                     {:keys [str-line how-many encoding] :or {encoding "ISO-8859-1"}} bytes-to-send
                     buf (buf/buffer str-line encoding)]
-                (loop [_]
+                (loop []
                   (if (or @paused-flag (>= @num-atom how-many))
                     nil
-                    (recur (do
-                             (stream/write sock buf)
-                             (swap! num-atom + 1))))))))
+                    (do
+                      (stream/write sock buf)
+                      (if (.writeQueueFull sock)
+                        (do
+                          (.pause this)
+                          (log/info "client sock full, MockByteSource paused.")
+                          (log/info @num-atom)
+                          (stream/on-drain sock #(do
+                                                   (.resume this)
+                                                   (log/info "client sock drained.")))))
+                      (swap! num-atom + 1)
+                      (recur))
+                    )))))
 
 
 
