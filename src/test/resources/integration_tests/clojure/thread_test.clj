@@ -18,7 +18,7 @@
   (let [ct (.getId (Thread/currentThread))]
   (fs/open "testdatafolder/thread.file" (fn [exm ar]
                                        (t/assert= ct @delay-id)
-                                       (t/test-complete)))))
+                                       (t/test-complete (fs/close ar))))))
 
 
 (t/start-tests)

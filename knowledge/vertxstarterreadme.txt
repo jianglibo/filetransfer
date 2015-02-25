@@ -32,8 +32,10 @@ mvn -Dit.test=ThreadTest verify
 #ITCircle#testOne+testTwo
 
 -Dtest.timeout=60 单位s
-
+-Dorg.vertx.logger-delegate-factory-class-name=org.vertx.java.core.logging.impl.Log4jLogDelegateFactory
 
 在集成测试环境下，classpath包含了target目录，但是直接vertx run raw verticle情况下，这些classpath都没有设置好，会启动失败。
+
+vertx runmod cn.intellijoy.vertx~filetransfer~1.0-SNAPSHOT -conf bm_c.json
 
 所以强制自己写测试代码，而不是人工观察。

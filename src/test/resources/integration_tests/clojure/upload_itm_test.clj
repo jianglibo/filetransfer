@@ -6,6 +6,7 @@
             [vertx.filesystem.sync :as syncfs]
             [vertx.core :as core]
             [cn.intellijoy.clojure.tapp-utils :as tapp-utils]
+            [cn.intellijoy.clojure.app-utils :as app-utils]
             [vertx.eventbus :as eb]))
 
 
@@ -14,7 +15,7 @@
 
 (defn upload [ & {:keys [how-many concurrent-files total-files data-dir] :or {concurrent-files 1 total-files 1}}]
   (let [rand-line (reduce #(str %1 %2) (take 100 (repeatedly rand)))
-        client-config (tapp-utils/sample-upload-data
+        client-config (app-utils/sample-upload-data
                 :report-to "test.data"
                 :concurrent-files concurrent-files
                 :total-files total-files

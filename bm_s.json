@@ -1,0 +1,6 @@
+{
+  "instances": 1,
+  "host": "localhost",
+  "port": 1234,
+  "data-dir": "testdatafolder/upload"
+}

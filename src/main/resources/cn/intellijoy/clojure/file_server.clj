@@ -5,7 +5,9 @@
             [clojure.data.json :as json]
             [vertx.filesystem.sync :as syncfs]
             [cn.intellijoy.clojure.file-server-include :as fsi]
+            [cn.intellijoy.clojure.app-constants :as app-constants]
             [vertx.filesystem :as fs]
+            [vertx.eventbus :as eb]
             [vertx.logging :as log]
             [vertx.stream :as stream]))
 
@@ -28,14 +30,13 @@
                             (fn [exm]
                               (if exm
                                 (log/error exm)
-                                (stream/write sock (short 0))))))))
+                                (do
+                                  (stream/write sock (short 0))
+                                  (eb/send app-constants/upload-finish-event-name {:filename (get-in @rece-state [:header :token])}))))))))
     (if (.writeQueueFull asyncfile)
         (do
           (.pause sock)
-          (log/info "server asycfile .writeQueueFull. sock paused.")
-          (stream/on-drain asyncfile #(do
-                                        (.resume sock)
-                                        (log/info "server asyncfile drained, sock resumed.")))))))
+          (stream/on-drain asyncfile #(.resume sock))))))
 
 (defn save-file
   "收到多少字节，用来决定写入文件的位置，
@@ -57,13 +58,11 @@
                   (if exm
                     (log/error exm)
                     (stream/write sock (short 0)))))
-      (if (.writeQueueFull asyncfile)
-        (do
-          (.pause sock)
-          (log/info "server asycfile .writeQueueFull. sock paused.")
-          (stream/on-drain asyncfile #(do
-                                        (.resume sock)
-                                        (log/info "server asyncfile drained, sock resumed."))))))))
+      (when (.writeQueueFull asyncfile)
+        (.pause sock)
+        (stream/on-drain asyncfile #(.resume sock))))))
+
+
 (defn create-data-handler
   "返回一个函数，这个函数引用了环境变量，相当于closure"
   [config sock]

@@ -1,6 +1,6 @@
 {
 
-  "main": "starter.clj",
+  "main": "cn/intellijoy/clojure/starter.clj",
   // Java verticle
   //"main":"cn.intellijoy.vertx.filetransfer.PingVerticle",
 

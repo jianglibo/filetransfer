@@ -7,6 +7,8 @@
             [vertx.filesystem.sync :as syncfs]
             [vertx.logging :as log]
             [cn.intellijoy.clojure.tapp-utils :as tapp-utils]
+            [cn.intellijoy.clojure.app-utils :as app-utils]
+            [cn.intellijoy.clojure.sampler :as sampler]
             [vertx.filesystem :as fs]
             [vertx.eventbus :as eb]))
 
@@ -14,14 +16,15 @@
 (tapp-utils/before-test)
 
 (defn test-tapp-utils []
-  (let [sampler (tapp-utils/sample-upload-data :report-to "ttt.data" :bytes-to-send {:str-line "abc\n" :how-many 100})]
-    (t/assert= sampler {:report-to "ttt.data"
-                        :header-to-send {:tag (short 0) :cmd-type (short 0) :file-len (int 400)}
+  (let [str-line (reduce #(str %1 %2) (take 100 (repeatedly rand)))
+        sampler (app-utils/sample-upload-data :report-to "ttt.data" :bytes-to-send {:str-line (str str-line "\n") :how-many 100})]
+    (t/assert= {:report-to "ttt.data"
+                        :header-to-send {:tag (short 0) :cmd-type (short 0) :file-len (int (* 100 (+ (.length str-line) 1)))}
                         :concurrent-files 1
                         :total-files 1
                         :port 1234
                         :host "localhost"
-                        :bytes-to-send {:str-line "abc\n" :how-many 100 :encoding "ISO-8859-1"}})
+                        :bytes-to-send {:str-line (str str-line "\n") :how-many 100 :encoding "ISO-8859-1"}} sampler)
     (t/test-complete)))
 
 (defn sync-file-write [path]

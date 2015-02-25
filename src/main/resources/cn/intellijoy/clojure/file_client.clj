@@ -19,46 +19,6 @@
 (def success-count (atom 0))
 (def failure-count (atom 0))
 
-(defn send-bytes
-  "此方法会占用大量内存，不利于压力测试，但是dotimes是异步行为，什么时候发送report-to是一个问题。"
-  [sock config]
-  (let [bytes-to-send (:bytes-to-send config)
-        {:keys [str-line how-many encoding] :or {encoding "ISO-8859-1"}} bytes-to-send
-        buf (buf/buffer str-line encoding)]
-    (dotimes [_ how-many]
-      (stream/write sock buf)) ))
-
-(defn start-interact-old
-  "如果目前在:start阶段，收到2个字节，0表示接下来上传文件，1表示出错了。
-  如果在:header-parsed阶段，收到2个字节，0表示上传成功，1表示上传失败。
-  当file-count到达1的时候，不应该再swap!它的值了。
-  "
-  [config sock buf-atom rece-state buffer]
-  (swap! buf-atom buf/append! buffer)
-  (let [len (.length @buf-atom)
-        report-to (:report-to config)]
-    (condp = (:stage @rece-state "reporter")
-      :start  (if (= len 2)
-                (let [res (buf/get-short @buf-atom 0)]
-                  (swap! rece-state assoc :stage :header-parsed)
-                  (reset! buf-atom (buf/buffer))
-                  (if (= res (short 0))
-                    (send-bytes sock config))))
-      :header-parsed (if (= len 2)
-                       (let [res (buf/get-short @buf-atom 0)]
-                         (swap! rece-state assoc :stage :header-parsed)
-                         (reset! buf-atom (buf/buffer))
-                         (if (= res (short 0))
-                           (swap! success-count + 1)
-                           (swap! failure-count + 1))
-                         (.close sock)
-                         (if (= @file-count 1)
-                           (eb/send report-to {:success-count @success-count :failure-count @failure-count}))
-                         (if (> @file-count 1)
-                           (swap! file-count - 1))))
-      nil)))
-
-
 (defn start-interact
   "如果目前在:start阶段，收到2个字节，0表示接下来上传文件，1表示出错了。
   如果在:header-parsed阶段，收到2个字节，0表示上传成功，1表示上传失败。
@@ -122,10 +82,14 @@
           (fn [err sock]
             (if-not err
               (do
-                (log/info (str "client fired. Thread Id: " (-> (Thread/currentThread) .getId)))
                 (stream/on-data sock (create-data-handler config sock))
                 (fci/send-header sock (:header-to-send config)))
-              (log/error err))))))
+              (do
+                (log/error err)
+;;                (log/info "retry after 3 seconds.")
+;;                (Thread/sleep 3000)
+;;                (fire-one config)
+                ))))))
 
 ;;要达成这样一种效果：
 ;;开始时启动并发个数的链接，然后当一个链接结束时，启动一个新的链接，使得连接数保持在指定的并发数。
@@ -135,10 +99,7 @@
   (reset! file-count (:total-files config))
   (add-watch file-count :upload-end-listener
              (fn [k r oldv newv]
-;;               (log/info (str "watch be called ........" newv))
                (if (>= newv cf)
                  (fire-one config))))
   (dotimes [_ cf]
     (fire-one config)))
-
-(log/info (str "file-client verticle started. Thread Id: " (-> (Thread/currentThread) .getId)))

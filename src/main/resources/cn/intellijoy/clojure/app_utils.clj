@@ -1,4 +1,5 @@
-(ns cn.intellijoy.clojure.app-utils)
+(ns cn.intellijoy.clojure.app-utils
+  (:require [cn.intellijoy.clojure.sampler :as sampler]))
 
 (defn sample-upload-data
   "头部的长度由token决定，
@@ -7,10 +8,14 @@
       :str-line
       :how-many
   "
-  [& {:keys [reply-to token bytes-to-send] :or {reply-to "test.data"}}]
-  (let [tlen (count (seq (.getBytes token "ISO-8859-1")))
-        flen (* (:how-many bytes-to-send) (count (seq (.getBytes (:str-line bytes-to-send) "ISO-8859-1"))))]
-    {:reply-to reply-to
-     :header-to-send [(short 0) (short 99) (short tlen) [token "ISO-8859-1"] (int flen)]
-     :bytes-to-send {:str-line (:str-line bytes-to-send) :how-many (:how-many bytes-to-send) :encoding "ISO-8859-1"}}))
-
+  [& {:keys [report-to bytes-to-send concurrent-files total-files port host]
+      :or
+      {report-to "test.data" bytes-to-send {:str-line sampler/str-line :how-many 10} concurrent-files 1 total-files 1 host "localhost" port 1234}}]
+  (let [flen (* (:how-many bytes-to-send) (alength (.getBytes (:str-line bytes-to-send) "ISO-8859-1")))]
+    {:report-to report-to
+     :header-to-send {:tag (short 0) :cmd-type (short 0) :file-len (int flen)}
+     :bytes-to-send {:str-line (:str-line bytes-to-send) :how-many (:how-many bytes-to-send) :encoding "ISO-8859-1"}
+     :concurrent-files concurrent-files
+     :total-files total-files
+     :port port
+     :host host}))
