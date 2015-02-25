@@ -29,13 +29,13 @@
   (let [len (.length @buf-atom)
         report-to (:report-to config)]
     (condp = (:stage @rece-state "reporter")
-      :start  (if (= len 2)
+      :start  (when (= len 2)
                 (let [res (buf/get-short @buf-atom 0)]
                   (swap! rece-state assoc :stage :header-parsed)
                   (reset! buf-atom (buf/buffer))
                   (if (= res (short 0))
                     (.startRead mbs))))
-      :header-parsed (if (= len 2)
+      :header-parsed (when (= len 2)
                        (let [res (buf/get-short @buf-atom 0)]
                          (swap! rece-state assoc :stage :header-parsed)
                          (reset! buf-atom (buf/buffer))
@@ -84,12 +84,8 @@
               (do
                 (stream/on-data sock (create-data-handler config sock))
                 (fci/send-header sock (:header-to-send config)))
-              (do
-                (log/error err)
-;;                (log/info "retry after 3 seconds.")
-;;                (Thread/sleep 3000)
-;;                (fire-one config)
-                ))))))
+                (log/error err))))))
+
 
 ;;要达成这样一种效果：
 ;;开始时启动并发个数的链接，然后当一个链接结束时，启动一个新的链接，使得连接数保持在指定的并发数。

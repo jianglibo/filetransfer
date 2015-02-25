@@ -32,8 +32,9 @@
                   (if exm
                     (log/error exm)
                     (do
+                      (swap! rece-state assoc :end-tms (.getTime (java.util.Date.)))
                       (stream/write sock (short 0))
-                      (eb/send app-constants/upload-finish-event-name {:filename (get-in @rece-state [:header :token])})))))
+                      (eb/send app-constants/upload-finish-event-name @rece-state)))))
       (when (.writeQueueFull asyncfile)
         (.pause sock)
         (stream/on-drain asyncfile #(.resume sock))))))
@@ -43,7 +44,7 @@
   "返回一个函数，这个函数引用了环境变量，相当于closure"
   [config sock]
   (let [buf-atom (atom (buf/buffer))
-        rece-state (atom {:stage :start})
+        rece-state (atom {:stage :start :start-tms (.getTime (java.util.Date.))})
         received-bytes-atom (atom 0)
         writen-bytes-atom (atom 0)]
     (fn [buffer]

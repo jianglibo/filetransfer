@@ -23,6 +23,8 @@
                                                          :bytes-to-send bytes-to-send)
                    :instances (:instances cfg 1))
     (do
+      (when (:verify-verticle cfg)
+        (deploy-verticle "cn/intellijoy/clojure/verify_verticle.clj" :instances 1))
       (deploy-verticle "cn/intellijoy/clojure/after_upload.clj" :instances 1)
       (deploy-verticle "cn/intellijoy/clojure/file_server.clj"
                        :config cfg
