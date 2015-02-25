@@ -12,32 +12,6 @@
             [vertx.stream :as stream]))
 
 
-(defn save-file-old
-  "收到多少字节，用来决定写入文件的位置，
-  写入多少字节到文件用来决定真正的上传成功。
-  当sock过来的速度太快，asyncfile来不及写入到磁盘，暂停sock，让后等待asyncfile的drain信息过来时，恢复sock"
-  [config sock rece-state received-bytes-atom writen-bytes-atom buffer]
-  (let [asyncfile (:rec-async-file @rece-state)
-        flen (get-in @rece-state [:header :file-length])
-        pos @received-bytes-atom
-        blen (.length buffer)]
-    (swap! received-bytes-atom + blen)
-    (fs/write asyncfile buffer pos
-              (fn [ex]
-                (swap! writen-bytes-atom + blen)
-                (if (= @writen-bytes-atom flen)
-                  (fs/close asyncfile
-                            (fn [exm]
-                              (if exm
-                                (log/error exm)
-                                (do
-                                  (stream/write sock (short 0))
-                                  (eb/send app-constants/upload-finish-event-name {:filename (get-in @rece-state [:header :token])}))))))))
-    (if (.writeQueueFull asyncfile)
-        (do
-          (.pause sock)
-          (stream/on-drain asyncfile #(.resume sock))))))
-
 (defn save-file
   "收到多少字节，用来决定写入文件的位置，
   写入多少字节到文件用来决定真正的上传成功。
@@ -57,7 +31,9 @@
                 (fn [exm]
                   (if exm
                     (log/error exm)
-                    (stream/write sock (short 0)))))
+                    (do
+                      (stream/write sock (short 0))
+                      (eb/send app-constants/upload-finish-event-name {:filename (get-in @rece-state [:header :token])})))))
       (when (.writeQueueFull asyncfile)
         (.pause sock)
         (stream/on-drain asyncfile #(.resume sock))))))

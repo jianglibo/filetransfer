@@ -39,3 +39,6 @@ mvn -Dit.test=ThreadTest verify
 vertx runmod cn.intellijoy.vertx~filetransfer~1.0-SNAPSHOT -conf bm_c.json
 
 所以强制自己写测试代码，而不是人工观察。
+
+vertx run cn/intellijoy/clojure/starter.clj -cp src/main/resources -conf bm_s.json
+vertx run cn/intellijoy/clojure/starter.clj -cp src/main/resources -conf bm_c.json

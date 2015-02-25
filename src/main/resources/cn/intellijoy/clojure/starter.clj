@@ -5,15 +5,13 @@
             [vertx.logging :as log]))
 
 
-(log/info "starter start")
-
 (let [cfg (config)
       bts (:bytes-to-send cfg)
       bytes-to-send (if (:str-line bts)
                       bts
                       (assoc bts :str-line sampler/str-line))]
 
-  (deploy-verticle "cn/intellijoy/clojure/after_upload.clj" :instances 1)
+
 
   ;; start the verticles that make up the app
   (if (:client cfg)
@@ -24,7 +22,8 @@
                                                          :port (:port cfg)
                                                          :bytes-to-send bytes-to-send)
                    :instances (:instances cfg 1))
-
-   (deploy-verticle "cn/intellijoy/clojure/file_server.clj"
-                    :config cfg
-                    :instances (:instances cfg 1))))
+    (do
+      (deploy-verticle "cn/intellijoy/clojure/after_upload.clj" :instances 1)
+      (deploy-verticle "cn/intellijoy/clojure/file_server.clj"
+                       :config cfg
+                       :instances (:instances cfg 1)))))
