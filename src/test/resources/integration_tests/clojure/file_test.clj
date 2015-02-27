@@ -20,7 +20,7 @@
         sampler (app-utils/sample-upload-data :report-to "ttt.data" :bytes-to-send {:str-line (str str-line "\n") :how-many 100})]
     (t/assert= {:report-to "ttt.data"
                         :header-to-send {:tag (short 0) :cmd-type (short 0) :file-len (int (* 100 (+ (.length str-line) 1)))}
-                        :concurrent-files 1
+                        :per-instance-files 1
                         :total-files 1
                         :port 1234
                         :host "localhost"

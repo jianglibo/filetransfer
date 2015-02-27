@@ -5,4 +5,4 @@
 
 (eb/on-message app-constants/upload-finish-event-name
   (fn [message]
-    (println "Got message body" message)))
+    nil))

@@ -3,6 +3,6 @@
   "host": "localhost",
   "port": 1234,
   "data-dir": "testdatafolder/upload",
-  "bm-total-files": 1,
+  "bm-total-files": 1000,
   "verify-verticle": true
 }

@@ -1,9 +1,9 @@
 {
   "client": true,
-  "instances": 1,
-  "current-files": 1,
-  "total-files": 1,
-  "bytes-to-send": {"how-many": 100},
+  "instances": 10,
+  "per-instance-files": 10,
+  "total-files": 100,
+  "bytes-to-send": {"how-many": 1000},
   "host": "localhost",
   "port": 1234
 }

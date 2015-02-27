@@ -9,14 +9,13 @@
             [clojure.java.io :as io]
             [cn.intellijoy.clojure.app-constants :as app-constants]
             [vertx.logging :as log]))
-;;newLine()
-;;write(str)
-;;close()
 
-;; File exists()
+(let [f (io/file "testdatafolder" "report")]
+  (when-not (.exists f)
+  (.mkdirs f)))
 
-(def rf (io/writer (str "report-" (-> (java.text.SimpleDateFormat. "yyyy-MM-dd-HHmmss")
-                                      (.format (java.util.Date.))) ".txt") :append true))
+(def rf (io/writer (io/file "testdatafolder" "report" (str "report-" (-> (java.text.SimpleDateFormat. "yyyy-MM-dd-HHmmss")
+                                      (.format (java.util.Date.))) ".txt")) :append true))
 
 (def uploaded-num (atom 0))
 
@@ -35,8 +34,9 @@
       bm-total-files (:bm-total-files config)]
   (eb/on-message app-constants/upload-finish-event-name
                  (fn [message]
+                   (log/info (str "got file " @uploaded-num))
                    (verify-one data-dir message)
-                   (.write rf message)
+                   (.write rf (str message))
                    (.newLine rf)
                    (swap! uploaded-num + 1)
                    (when (>= @uploaded-num bm-total-files)

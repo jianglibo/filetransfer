@@ -29,8 +29,8 @@ import org.vertx.testtools.TestVerticleInfo;
  * The scripts go in src/test/resources.
  */
 @RunWith(ScriptClassRunner.class)
-@TestVerticleInfo(filenameFilter = "upload_ut_test.clj", funcRegex = "defn[\\s]+(test[^\\s]+)")
-public class UploadUtTest {
+@TestVerticleInfo(filenameFilter = "cp_test.clj", funcRegex = "defn[\\s]+(test[^\\s]+)")
+public class CpItTest {
 
     @Test
     public void __vertxDummy() {

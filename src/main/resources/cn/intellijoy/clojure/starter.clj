@@ -11,12 +11,10 @@
                       bts
                       (assoc bts :str-line sampler/str-line))]
 
-
-
   ;; start the verticles that make up the app
   (if (:client cfg)
    (deploy-verticle "cn/intellijoy/clojure/file_client.clj"
-                   :config (app-utils/sample-upload-data :current-files (:current-files cfg)
+                   :config (app-utils/sample-upload-data :per-instance-files (:per-instance-files cfg)
                                                          :total-files (:total-files cfg)
                                                          :host (:host cfg)
                                                          :port (:port cfg)
@@ -24,7 +22,7 @@
                    :instances (:instances cfg 1))
     (do
       (when (:verify-verticle cfg)
-        (deploy-verticle "cn/intellijoy/clojure/verify_verticle.clj" :instances 1))
+        (deploy-verticle "cn/intellijoy/clojure/verify_verticle.clj" :config cfg :instances 1))
       (deploy-verticle "cn/intellijoy/clojure/after_upload.clj" :instances 1)
       (deploy-verticle "cn/intellijoy/clojure/file_server.clj"
                        :config cfg

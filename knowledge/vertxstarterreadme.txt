@@ -42,3 +42,7 @@ vertx runmod cn.intellijoy.vertx~filetransfer~1.0-SNAPSHOT -conf bm_c.json
 
 vertx run cn/intellijoy/clojure/starter.clj -cp src/main/resources -conf bm_s.json
 vertx run cn/intellijoy/clojure/starter.clj -cp src/main/resources -conf bm_c.json
+
+vertx runzip target\filetransfer-1.0-SNAPSHOT-mod.zip -conf bm_s.json
+
+vertx runmod cn.intellijoy.vertx~filetransfer~1.0-SNAPSHOT -conf bm_s.json
