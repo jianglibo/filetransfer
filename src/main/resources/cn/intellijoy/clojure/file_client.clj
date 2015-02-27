@@ -15,7 +15,6 @@
 (defonce file-count (atom (:total-files (core/config) 1)))
 (defonce success-count (atom 0))
 (defonce failure-count (atom 0))
-(defonce started-count (atom 0))
 
 ;  "因为需要多文件并发测试，每个文件名必须不同，不能预先设定，最好的办法是用uuid。"
 (defonce send-header
@@ -58,8 +57,7 @@
 ;;如果在:header-parsed阶段，收到2个字节，0表示上传成功，1表示上传失败。
 ;;当file-count到达1的时候，不应该再swap!它的值了。
 (defonce start-interact
-  (fn
-    [config sock buf-atom rece-state mbs buffer]
+  (fn [config instance-count sock buf-atom rece-state mbs buffer]
     (swap! buf-atom buf/append! buffer)
     (let [len (.length @buf-atom)
           report-to (:report-to config)]
@@ -79,6 +77,8 @@
                              (swap! failure-count + 1))
                            (.close sock)
                            (swap! file-count - 1)
+                           (when (> @instance-count 1)
+                             (swap! instance-count - 1))
                            (when (< @file-count 1)
                              (eb/send report-to {:success-count @success-count :failure-count @failure-count}))))
         nil))))
@@ -90,12 +90,12 @@
 ;;如果因为程序写入到sock过快，引起sock的.writeQueueFull，就请MockByteSource暂停，当sock通知drain时再通知MockByteSource重新发送
 
 (defonce create-data-handler
-  (fn [config sock]
+  (fn [config instance-count sock]
     (let [buf-atom (atom (buf/buffer))
           rece-state (atom {:stage :start})
           mbs (->MockByteSource (atom 0) (atom false) sock config)]
       (fn [buffer]
-        (start-interact config sock buf-atom rece-state mbs buffer)))))
+        (start-interact config instance-count sock buf-atom rece-state mbs buffer)))))
 
 
 ;;  "fire one connect,
@@ -111,21 +111,20 @@
 ;;
 
 (defonce fire-one
-  (fn [config]
-    (log/info (str "start file number:" @started-count))
-    (swap! started-count + 1)
+  (fn [config instance-count]
     (-> (net/client)
         (net/connect (:port config) (:host config)
                      (fn [err sock]
                        (if-not err
                          (do
-                           (stream/on-data sock (create-data-handler config sock))
+                           (stream/on-data sock (create-data-handler config instance-count sock))
                            (send-header sock (:header-to-send config)))
                          (log/error err)))))))
 
 (let [config (core/config)
-      cf (:per-instance-files config)]
+      cf (:per-instance-files config 1)
+      instance-count (atom cf)]
   (log/info (str ":per-instance-files" cf))
-  (dotimes [n cf]
-    (log/info (str "start file loop:" n))
-    (fire-one config)))
+  (add-watch instance-count :instance-count-watcher (fn [k atm ov nv]
+                                                      (fire-one config instance-count)))
+  (fire-one config instance-count))

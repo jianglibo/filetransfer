@@ -23,9 +23,10 @@
   [path rece-state]
   (let [filename (get-in rece-state [:header :token])
         f (io/file path filename)
-        len (.length f)]
-    (if-not (= len (get-in rece-state [:header :file-length]))
-      (log/info "wrong file length.")
+        len (.length f)
+        hlen (get-in rece-state [:header :file-length])]
+    (if-not (= len hlen)
+      (log/info (str "wrong file length. expected " hlen ", actual: " len))
       (io/delete-file f))))
 
 
