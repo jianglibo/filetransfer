@@ -4,5 +4,6 @@
   "port": 1234,
   "data-dir": "testdatafolder/upload",
   "bm-total-files": 1000,
-  "verify-verticle": true
+  "host": "localhost",
+  "verify-verticle": false
 }

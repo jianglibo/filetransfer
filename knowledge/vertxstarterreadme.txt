@@ -46,3 +46,6 @@ vertx run cn/intellijoy/clojure/starter.clj -cp src/main/resources -conf bm_c.js
 vertx runzip target\filetransfer-1.0-SNAPSHOT-mod.zip -conf bm_s.json
 
 vertx runmod cn.intellijoy.vertx~filetransfer~1.0-SNAPSHOT -conf bm_s.json
+
+  "host": "192.168.88.130",
+  "host": "localhost",
