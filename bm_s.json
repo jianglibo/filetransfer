@@ -1,9 +1,8 @@
 {
-  "instances": 1,
+  "instances": 100,
   "host": "localhost",
   "port": 1234,
   "data-dir": "testdatafolder/upload",
-  "bm-total-files": 1000,
-  "host": "localhost",
-  "verify-verticle": false
+  "bm-total-files": 2000,
+  "verify-verticle": true
 }

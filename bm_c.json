@@ -1,8 +1,8 @@
 {
   "client": true,
-  "instances": 1,
-  "per-instance-files": 1,
-  "total-files": 1000,
+  "instances": 200,
+  "per-instance-files": 10,
+  "total-files": 2000,
   "bytes-to-send": {"how-many": 1000},
   "host": "localhost",
   "port": 1234
