@@ -18,3 +18,40 @@ start-》c开始发送头部（包含后续发送的文件的长度）-》s接�
 为了在一次链接过程中完成多个数据交换，可以将累积用的buffer放在atom中。这样每个阶段结束，可以用新的buffer开始。
 
 此程序代码就是用这种思路写成，采用clojure，当然你用vertx支持的其它语言都是一样的。
+
+# 性能测试
+
+client config:
+
+````
+{
+  "client": true,
+  "instances": 200, 启动200个线程
+  "per-instance-files": 10, 每个线程上传10次
+  "total-files": 2000, 总共2000个上传
+  "bytes-to-send": {"how-many": 1000}, 将预设的字符串上传1000次作为一个文件上传，见sampler.clj，单个字符串长度1140字节
+  "host": "localhost",
+  "port": 1234
+}
+````
+
+server config:
+```
+{
+  "instances": 100,
+  "host": "localhost",
+  "port": 1234,
+  "data-dir": "testdatafolder/upload",
+  "bm-total-files": 2000,
+  "verify-verticle": true
+}
+```
+
+1.启动服务
+vertx run cn/intellijoy/clojure/starter.clj -cp src/main/resources -conf bm_s.json
+或者
+vertx runzip target\filetransfer-1.0-SNAPSHOT-mod.zip -conf bm_s.json
+
+2.启动客户端
+vertx run cn/intellijoy/clojure/starter.clj -cp src/main/resources -conf bm_c.json
+vertx runzip target\filetransfer-1.0-SNAPSHOT-mod.zip -conf bm_c.json
