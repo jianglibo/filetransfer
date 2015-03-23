@@ -2,7 +2,7 @@ Creating a project using the archetype and specifying it exactly and specifying 
 
 This will search for any archetypes in the io.vertx group and prompt you to choose one.
 
-mvn archetype:generate -DarchetypeGroupId=io.vertx -DarchetypeArtifactId=vertx-maven-archetype -DarchetypeVersion=2.0 \ -DgroupId=com.foo.bar -DartifactId=baz -Dversion=1.0
+mvn archetype:generate -DarchetypeGroupId=io.vertx -DarchetypeArtifactId=vertx-maven-archetype -DarchetypeVersion=2.0.11-final -DgroupId=cc.openscanner.vertx -DartifactId=notifier -Dversion=0.0.1
 
 因为vertx官方将archetype plugin项目发布到中央maven库，所以采用这个方法可以忽略archetype catalog的限制。
 
