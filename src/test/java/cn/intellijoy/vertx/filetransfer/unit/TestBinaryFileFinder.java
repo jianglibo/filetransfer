@@ -10,6 +10,9 @@ import java.util.regex.Matcher;
 import org.junit.Assert;
 import org.junit.Test;
 
+import static org.hamcrest.CoreMatchers.*;
+
+import static org.junit.Assert.*;
 
 import cn.intellijoy.vertx.filetransfer.BinaryFileFinder;
 import cn.intellijoy.vertx.filetransfer.BinaryFileFinder.BinaryFindResult;
@@ -29,33 +32,36 @@ public class TestBinaryFileFinder {
   public void t() {
     
     byte[] bts = strToFind.getBytes(StandardCharsets.UTF_8);
-    Assert.assertEquals("should has 14 bytes", 14, bts.length);
+    
+    assertThat(bts.length, is(14));
     
     BinaryFileFinder bff = new BinaryFileFinder(path,strToFind, StandardCharsets.ISO_8859_1, 10);
     BinaryFindResult result = bff.findFirst();
     Assert.assertNotNull(result);
-    Assert.assertEquals(10, result.getExtraBytes().length);
+    assertThat(result, is(notNullValue(BinaryFindResult.class)));
     
     bff = new BinaryFileFinder(path,strToFind, StandardCharsets.ISO_8859_1, 0);
     result = bff.findFirst();
-    Assert.assertNotNull(result);
-    Assert.assertEquals(0, result.getExtraBytes().length);
+    assertThat(result, is(notNullValue(BinaryFindResult.class)));
+    
+    assertThat(result.getExtraBytes().length, is(0));
+    
     Assert.assertTrue(result.getExtraAsString().isEmpty());
+    assertThat(result.getExtraAsString().isEmpty(), is(true));
     
     bff = new BinaryFileFinder(path,strToFind, StandardCharsets.ISO_8859_1);
     result = bff.findFirst();
-    Assert.assertNotNull(result);
-    Assert.assertEquals(0, result.getExtraBytes().length);
+    assertThat(result, is(notNullValue(BinaryFindResult.class)));
+    assertThat(result.getExtraBytes().length, is(0));
     
     bff = new BinaryFileFinder(path,strToFind, StandardCharsets.ISO_8859_1, 20);
     result = bff.findFirst();
-    Assert.assertNotNull(result);
-    Assert.assertEquals(18, result.getExtraBytes().length);
+    assertThat(result, is(notNullValue(BinaryFindResult.class)));
+    assertThat(result.getExtraBytes().length, is(18));
     
     Matcher matcher = result.getMatcher(".*?(\\d+).*?(\\d+).*");
-    Assert.assertTrue(matcher.matches());
-    
-    Assert.assertEquals("first match is 11", "11", matcher.group(1));
-    Assert.assertEquals("second match is 18", "18", matcher.group(2));
+    assertThat(matcher.matches(), is(true));
+    assertThat(matcher.group(1), is("11"));
+    assertThat(matcher.group(2), is("18"));
   }
 }
